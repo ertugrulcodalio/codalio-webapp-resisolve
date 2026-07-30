@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_30_145206) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_30_145328) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_145206) do
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
   end
 
+  create_table "buildings", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "address", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_buildings_on_organization_id"
+  end
+
   create_table "friendly_id_slugs", force: :cascade do |t|
     t.string "slug", null: false
     t.integer "sluggable_id", null: false
@@ -85,6 +94,37 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_145206) do
     t.index ["sluggable_type"], name: "index_friendly_id_slugs_on_sluggable_type"
   end
 
+  create_table "maintenance_comments", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "maintenance_request_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["maintenance_request_id"], name: "index_maintenance_comments_on_maintenance_request_id"
+    t.index ["organization_id"], name: "index_maintenance_comments_on_organization_id"
+    t.index ["user_id"], name: "index_maintenance_comments_on_user_id"
+  end
+
+  create_table "maintenance_requests", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "description", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "severity", default: 0, null: false
+    t.bigint "tenant_profile_id", null: false
+    t.bigint "unit_id", null: false
+    t.bigint "service_category_id", null: false
+    t.bigint "technician_profile_id"
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_maintenance_requests_on_organization_id"
+    t.index ["service_category_id"], name: "index_maintenance_requests_on_service_category_id"
+    t.index ["technician_profile_id"], name: "index_maintenance_requests_on_technician_profile_id"
+    t.index ["tenant_profile_id"], name: "index_maintenance_requests_on_tenant_profile_id"
+    t.index ["unit_id"], name: "index_maintenance_requests_on_unit_id"
+  end
+
   create_table "organizations", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
@@ -95,6 +135,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_145206) do
     t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "service_categories", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "status", default: 0, null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_service_categories_on_organization_id"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|
@@ -239,6 +288,39 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_145206) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "technician_profiles", force: :cascade do |t|
+    t.string "specialty", null: false
+    t.bigint "user_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_technician_profiles_on_organization_id"
+    t.index ["user_id"], name: "index_technician_profiles_on_user_id"
+  end
+
+  create_table "tenant_profiles", force: :cascade do |t|
+    t.date "lease_start_date", null: false
+    t.date "lease_end_date", null: false
+    t.bigint "user_id", null: false
+    t.bigint "unit_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_tenant_profiles_on_organization_id"
+    t.index ["unit_id"], name: "index_tenant_profiles_on_unit_id"
+    t.index ["user_id"], name: "index_tenant_profiles_on_user_id"
+  end
+
+  create_table "units", force: :cascade do |t|
+    t.string "number", null: false
+    t.bigint "building_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["building_id"], name: "index_units_on_building_id"
+    t.index ["organization_id"], name: "index_units_on_organization_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
@@ -301,12 +383,29 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_145206) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "buildings", "organizations"
+  add_foreign_key "maintenance_comments", "maintenance_requests"
+  add_foreign_key "maintenance_comments", "organizations"
+  add_foreign_key "maintenance_comments", "users"
+  add_foreign_key "maintenance_requests", "organizations"
+  add_foreign_key "maintenance_requests", "service_categories"
+  add_foreign_key "maintenance_requests", "technician_profiles"
+  add_foreign_key "maintenance_requests", "tenant_profiles"
+  add_foreign_key "maintenance_requests", "units"
+  add_foreign_key "service_categories", "organizations"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "technician_profiles", "organizations"
+  add_foreign_key "technician_profiles", "users"
+  add_foreign_key "tenant_profiles", "organizations"
+  add_foreign_key "tenant_profiles", "units"
+  add_foreign_key "tenant_profiles", "users"
+  add_foreign_key "units", "buildings"
+  add_foreign_key "units", "organizations"
   add_foreign_key "users_role_invites", "organizations"
   add_foreign_key "users_role_invites", "roles"
   add_foreign_key "users_roles", "organizations"

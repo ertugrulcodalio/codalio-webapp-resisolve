@@ -21,5 +21,12 @@ Rhino.setup do |config|
 
   # The list of resources exposed in the API
   config.resources += [ "User", "Account" ]
-  config.resources += ["Organization", "UsersRole", "Role", "UsersRoleInvite"]
+  config.resources += [ "Organization", "UsersRole", "Role", "UsersRoleInvite" ]
+  config.resources += [ "TechnicianProfile" ]
+  config.resources += [ "Building" ]
+  config.resources += [ "Unit" ]
+  config.resources += [ "TenantProfile" ]
+  config.resources += [ "ServiceCategory" ]
+  config.resources += [ "MaintenanceRequest" ]
+  config.resources += [ "MaintenanceComment" ]
 end
